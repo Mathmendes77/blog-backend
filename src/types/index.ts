@@ -21,6 +21,7 @@ export interface Article {
   title: string;
   content: string;
   summary?: string | null;
+  tags?: string | null;
   banner_image?: Buffer | null;
   banner_mime?: string | null;
   author_id: number;
@@ -31,6 +32,18 @@ export interface Article {
 export interface ArticleWithAuthor extends Omit<Article, "banner_image"> {
   author_name: string;
   has_banner: boolean;
+}
+
+export interface Comment {
+  id: number;
+  article_id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
+}
+
+export interface CommentWithAuthor extends Comment {
+  author_name: string;
 }
 
 export interface AuthTokenPayload {

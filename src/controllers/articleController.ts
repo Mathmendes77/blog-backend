@@ -8,14 +8,15 @@ export async function listArticles(req: Request, res: Response): Promise<void> {
     const search = (req.query.search as string) || "";
 
     const [rows] = await pool.query<any[]>(
-      `SELECT a.id, a.title, a.summary, a.author_id, a.published_at, a.updated_at,
+      `SELECT a.id, a.title, a.summary, a.tags, a.author_id, a.published_at, a.updated_at,
+              CHAR_LENGTH(a.content) AS content_length,
               u.name AS author_name,
               (a.banner_image IS NOT NULL) AS has_banner
        FROM articles a
        JOIN users u ON u.id = a.author_id
-       WHERE a.title LIKE ? OR a.summary LIKE ?
+       WHERE a.title LIKE ? OR a.summary LIKE ? OR a.tags LIKE ?
        ORDER BY a.published_at DESC`,
-      [`%${search}%`, `%${search}%`]
+      [`%${search}%`, `%${search}%`, `%${search}%`]
     );
 
     res.json(rows);
@@ -31,7 +32,7 @@ export async function getArticleById(req: Request, res: Response): Promise<void>
     const { id } = req.params;
 
     const [rows] = await pool.query<any[]>(
-      `SELECT a.id, a.title, a.content, a.summary, a.author_id, a.published_at, a.updated_at,
+      `SELECT a.id, a.title, a.content, a.summary, a.tags, a.author_id, a.published_at, a.updated_at,
               u.name AS author_name,
               (a.banner_image IS NOT NULL) AS has_banner
        FROM articles a
@@ -77,7 +78,7 @@ export async function getArticleBanner(req: Request, res: Response): Promise<voi
 
 export async function createArticle(req: Request, res: Response): Promise<void> {
   try {
-    const { title, content, summary } = req.body;
+    const { title, content, summary, tags } = req.body;
     const authorId = req.user?.id;
 
     if (!title || !content) {
@@ -89,9 +90,9 @@ export async function createArticle(req: Request, res: Response): Promise<void> 
     const bannerMime = req.file ? req.file.mimetype : null;
 
     const [result] = await pool.query<any>(
-      `INSERT INTO articles (title, content, summary, banner_image, banner_mime, author_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [title, content, summary || null, bannerBuffer, bannerMime, authorId]
+      `INSERT INTO articles (title, content, summary, tags, banner_image, banner_mime, author_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [title, content, summary || null, tags || null, bannerBuffer, bannerMime, authorId]
     );
 
     res.status(201).json({ message: "Artigo criado com sucesso.", id: result.insertId });
@@ -104,7 +105,7 @@ export async function createArticle(req: Request, res: Response): Promise<void> 
 export async function updateArticle(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const { title, content, summary } = req.body;
+    const { title, content, summary, tags } = req.body;
     const userId = req.user?.id;
 
     const [rows] = await pool.query<any[]>("SELECT author_id FROM articles WHERE id = ?", [id]);
@@ -121,14 +122,14 @@ export async function updateArticle(req: Request, res: Response): Promise<void> 
 
     if (req.file) {
       await pool.query(
-        `UPDATE articles SET title = ?, content = ?, summary = ?, banner_image = ?, banner_mime = ?
+        `UPDATE articles SET title = ?, content = ?, summary = ?, tags = ?, banner_image = ?, banner_mime = ?
          WHERE id = ?`,
-        [title, content, summary || null, req.file.buffer, req.file.mimetype, id]
+        [title, content, summary || null, tags || null, req.file.buffer, req.file.mimetype, id]
       );
     } else {
       await pool.query(
-        `UPDATE articles SET title = ?, content = ?, summary = ? WHERE id = ?`,
-        [title, content, summary || null, id]
+        `UPDATE articles SET title = ?, content = ?, summary = ?, tags = ? WHERE id = ?`,
+        [title, content, summary || null, tags || null, id]
       );
     }
 
