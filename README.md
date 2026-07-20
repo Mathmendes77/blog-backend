@@ -109,12 +109,19 @@ Resposta (login/registro):
 | DELETE | `/articles/:id`          | Remove um artigo (apenas o autor)   | Sim          |
 
 Para criar/editar um artigo, envie como `multipart/form-data` os campos:
-`title`, `content`, `summary` (opcional) e `banner` (arquivo de imagem, opcional).
+`title`, `content`, `summary` (opcional), `tags` (opcional, string separada por vírgula, ex: `"Tecnologia,IA"`) e `banner` (arquivo de imagem, opcional).
 
 O header de autenticação deve ser enviado em todas as rotas protegidas:
 ```
 Authorization: Bearer <token>
 ```
+
+### Comentários (`/articles/:id/comments`)
+| Método | Rota                             | Descrição                          | Autenticação |
+|--------|-----------------------------------|--------------------------------------|--------------|
+| GET    | `/articles/:id/comments`          | Lista os comentários de um artigo   | Não          |
+| POST   | `/articles/:id/comments`          | Cria um comentário (`{ "content": "..." }`) | Sim  |
+| DELETE | `/articles/comments/:commentId`   | Remove um comentário (apenas o autor do comentário) | Sim |
 
 ## 🔒 Segurança
 - Senhas armazenadas com hash `bcrypt`.
