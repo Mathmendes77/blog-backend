@@ -3,7 +3,8 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  avatar_url?: string | null;
+  avatar_image?: Buffer | null;
+  avatar_mime?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -12,7 +13,7 @@ export interface UserPublic {
   id: number;
   name: string;
   email: string;
-  avatar_url?: string | null;
+  has_avatar?: boolean;
   created_at?: string;
 }
 

@@ -11,7 +11,8 @@ export async function listArticles(req: Request, res: Response): Promise<void> {
       `SELECT a.id, a.title, a.summary, a.tags, a.author_id, a.published_at, a.updated_at,
               CHAR_LENGTH(a.content) AS content_length,
               u.name AS author_name,
-              (a.banner_image IS NOT NULL) AS has_banner
+              (a.banner_image IS NOT NULL) AS has_banner,
+              (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id) AS comment_count
        FROM articles a
        JOIN users u ON u.id = a.author_id
        WHERE a.title LIKE ? OR a.summary LIKE ? OR a.tags LIKE ?
@@ -34,7 +35,8 @@ export async function getArticleById(req: Request, res: Response): Promise<void>
     const [rows] = await pool.query<any[]>(
       `SELECT a.id, a.title, a.content, a.summary, a.tags, a.author_id, a.published_at, a.updated_at,
               u.name AS author_name,
-              (a.banner_image IS NOT NULL) AS has_banner
+              (a.banner_image IS NOT NULL) AS has_banner,
+              (SELECT COUNT(*) FROM comments c WHERE c.article_id = a.id) AS comment_count
        FROM articles a
        JOIN users u ON u.id = a.author_id
        WHERE a.id = ?`,

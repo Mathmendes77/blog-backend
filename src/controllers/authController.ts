@@ -86,7 +86,8 @@ export async function me(req: Request, res: Response): Promise<void> {
   try {
     const userId = req.user?.id;
     const [rows] = await pool.query<any[]>(
-      "SELECT id, name, email, avatar_url, created_at FROM users WHERE id = ?",
+      `SELECT id, name, email, created_at, (avatar_image IS NOT NULL) AS has_avatar
+       FROM users WHERE id = ?`,
       [userId]
     );
 
@@ -99,5 +100,61 @@ export async function me(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erro interno ao buscar usuário." });
+  }
+}
+
+export async function updateProfile(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      res.status(400).json({ message: "O nome não pode ficar vazio." });
+      return;
+    }
+
+    if (req.file) {
+      await pool.query("UPDATE users SET name = ?, avatar_image = ?, avatar_mime = ? WHERE id = ?", [
+        name.trim(),
+        req.file.buffer,
+        req.file.mimetype,
+        userId,
+      ]);
+    } else {
+      await pool.query("UPDATE users SET name = ? WHERE id = ?", [name.trim(), userId]);
+    }
+
+    const [rows] = await pool.query<any[]>(
+      `SELECT id, name, email, created_at, (avatar_image IS NOT NULL) AS has_avatar
+       FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    res.json({ message: "Perfil atualizado com sucesso.", user: rows[0] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro interno ao atualizar perfil." });
+  }
+}
+
+export async function getAvatar(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await pool.query<any[]>(
+      "SELECT avatar_image, avatar_mime FROM users WHERE id = ?",
+      [id]
+    );
+
+    if (rows.length === 0 || !rows[0].avatar_image) {
+      res.status(404).json({ message: "Avatar não encontrado." });
+      return;
+    }
+
+    res.setHeader("Content-Type", rows[0].avatar_mime || "image/jpeg");
+    res.send(rows[0].avatar_image);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro interno ao buscar avatar." });
   }
 }
