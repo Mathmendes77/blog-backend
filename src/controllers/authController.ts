@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { pool } from "../config/database";
-import { generateToken } from "../utils/jwt";
-import { User } from "../types";
+import { gerarToken } from "../utils/jwt";
+import { Usuario } from "../types";
 
-const SALT_ROUNDS = 10;
+const RODADAS_SALT = 10;
 
-export async function register(req: Request, res: Response): Promise<void> {
+export async function cadastrar(req: Request, res: Response): Promise<void> {
   try {
     const { name, email, password } = req.body;
 
@@ -20,28 +20,28 @@ export async function register(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const [existing] = await pool.query<any[]>("SELECT id FROM users WHERE email = ?", [email]);
-    if (existing.length > 0) {
+    const [existentes] = await pool.query<any[]>("SELECT id FROM users WHERE email = ?", [email]);
+    if (existentes.length > 0) {
       res.status(409).json({ message: "Já existe um usuário cadastrado com este email." });
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const senhaCriptografada = await bcrypt.hash(password, RODADAS_SALT);
 
-    const [result] = await pool.query<any>(
+    const [resultado] = await pool.query<any>(
       "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-      [name, email, hashedPassword]
+      [name, email, senhaCriptografada]
     );
 
-    const token = generateToken({ id: result.insertId, email });
+    const token = gerarToken({ id: resultado.insertId, email });
 
     res.status(201).json({
       message: "Usuário cadastrado com sucesso.",
       token,
-      user: { id: result.insertId, name, email },
+      user: { id: resultado.insertId, name, email },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (erro) {
+    console.error(erro);
     res.status(500).json({ message: "Erro interno ao cadastrar usuário." });
   }
 }
@@ -55,57 +55,57 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const [rows] = await pool.query<any[]>("SELECT * FROM users WHERE email = ?", [email]);
-    const user = rows[0] as User | undefined;
+    const [linhas] = await pool.query<any[]>("SELECT * FROM users WHERE email = ?", [email]);
+    const usuario = linhas[0] as Usuario | undefined;
 
-    if (!user) {
+    if (!usuario) {
       res.status(401).json({ message: "Email ou senha inválidos." });
       return;
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) {
+    const senhaCorreta = await bcrypt.compare(password, usuario.password);
+    if (!senhaCorreta) {
       res.status(401).json({ message: "Email ou senha inválidos." });
       return;
     }
 
-    const token = generateToken({ id: user.id, email: user.email });
+    const token = gerarToken({ id: usuario.id, email: usuario.email });
 
     res.json({
       message: "Login realizado com sucesso.",
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: usuario.id, name: usuario.name, email: usuario.email },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (erro) {
+    console.error(erro);
     res.status(500).json({ message: "Erro interno ao realizar login." });
   }
 }
 
-export async function me(req: Request, res: Response): Promise<void> {
+export async function buscarUsuarioLogado(req: Request, res: Response): Promise<void> {
   try {
-    const userId = req.user?.id;
-    const [rows] = await pool.query<any[]>(
+    const idUsuario = req.usuario?.id;
+    const [linhas] = await pool.query<any[]>(
       `SELECT id, name, email, created_at, (avatar_image IS NOT NULL) AS has_avatar
        FROM users WHERE id = ?`,
-      [userId]
+      [idUsuario]
     );
 
-    if (rows.length === 0) {
+    if (linhas.length === 0) {
       res.status(404).json({ message: "Usuário não encontrado." });
       return;
     }
 
-    res.json(rows[0]);
-  } catch (error) {
-    console.error(error);
+    res.json(linhas[0]);
+  } catch (erro) {
+    console.error(erro);
     res.status(500).json({ message: "Erro interno ao buscar usuário." });
   }
 }
 
-export async function updateProfile(req: Request, res: Response): Promise<void> {
+export async function atualizarPerfil(req: Request, res: Response): Promise<void> {
   try {
-    const userId = req.user?.id;
+    const idUsuario = req.usuario?.id;
     const { name } = req.body;
 
     if (!name || !name.trim()) {
@@ -118,43 +118,43 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
         name.trim(),
         req.file.buffer,
         req.file.mimetype,
-        userId,
+        idUsuario,
       ]);
     } else {
-      await pool.query("UPDATE users SET name = ? WHERE id = ?", [name.trim(), userId]);
+      await pool.query("UPDATE users SET name = ? WHERE id = ?", [name.trim(), idUsuario]);
     }
 
-    const [rows] = await pool.query<any[]>(
+    const [linhas] = await pool.query<any[]>(
       `SELECT id, name, email, created_at, (avatar_image IS NOT NULL) AS has_avatar
        FROM users WHERE id = ?`,
-      [userId]
+      [idUsuario]
     );
 
-    res.json({ message: "Perfil atualizado com sucesso.", user: rows[0] });
-  } catch (error) {
-    console.error(error);
+    res.json({ message: "Perfil atualizado com sucesso.", user: linhas[0] });
+  } catch (erro) {
+    console.error(erro);
     res.status(500).json({ message: "Erro interno ao atualizar perfil." });
   }
 }
 
-export async function getAvatar(req: Request, res: Response): Promise<void> {
+export async function buscarAvatar(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
 
-    const [rows] = await pool.query<any[]>(
+    const [linhas] = await pool.query<any[]>(
       "SELECT avatar_image, avatar_mime FROM users WHERE id = ?",
       [id]
     );
 
-    if (rows.length === 0 || !rows[0].avatar_image) {
+    if (linhas.length === 0 || !linhas[0].avatar_image) {
       res.status(404).json({ message: "Avatar não encontrado." });
       return;
     }
 
-    res.setHeader("Content-Type", rows[0].avatar_mime || "image/jpeg");
-    res.send(rows[0].avatar_image);
-  } catch (error) {
-    console.error(error);
+    res.setHeader("Content-Type", linhas[0].avatar_mime || "image/jpeg");
+    res.send(linhas[0].avatar_image);
+  } catch (erro) {
+    console.error(erro);
     res.status(500).json({ message: "Erro interno ao buscar avatar." });
   }
 }

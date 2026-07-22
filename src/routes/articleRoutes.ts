@@ -1,33 +1,33 @@
 import { Router } from "express";
 import {
-  listArticles,
-  getArticleById,
-  getArticleBanner,
-  createArticle,
-  updateArticle,
-  deleteArticle,
+  listarArtigos,
+  buscarArtigoPorId,
+  buscarBannerArtigo,
+  criarArtigo,
+  atualizarArtigo,
+  excluirArtigo,
 } from "../controllers/articleController";
 import {
-  listComments,
-  createComment,
-  deleteComment,
+  listarComentarios,
+  criarComentario,
+  excluirComentario,
 } from "../controllers/commentController";
-import { authMiddleware } from "../middlewares/auth";
-import { upload } from "../middlewares/upload";
+import { autenticar } from "../middlewares/auth";
+import { uploadImagem } from "../middlewares/upload";
 
 const router = Router();
 
 // Rotas públicas
-router.get("/", listArticles);
-router.get("/:id", getArticleById);
-router.get("/:id/banner", getArticleBanner);
-router.get("/:id/comments", listComments);
+router.get("/", listarArtigos);
+router.get("/:id", buscarArtigoPorId);
+router.get("/:id/banner", buscarBannerArtigo);
+router.get("/:id/comments", listarComentarios);
 
 // Rotas protegidas (exigem login)
-router.post("/", authMiddleware, upload.single("banner"), createArticle);
-router.put("/:id", authMiddleware, upload.single("banner"), updateArticle);
-router.delete("/:id", authMiddleware, deleteArticle);
-router.post("/:id/comments", authMiddleware, createComment);
-router.delete("/comments/:commentId", authMiddleware, deleteComment);
+router.post("/", autenticar, uploadImagem.single("banner"), criarArtigo);
+router.put("/:id", autenticar, uploadImagem.single("banner"), atualizarArtigo);
+router.delete("/:id", autenticar, excluirArtigo);
+router.post("/:id/comments", autenticar, criarComentario);
+router.delete("/comments/:commentId", autenticar, excluirComentario);
 
 export default router;

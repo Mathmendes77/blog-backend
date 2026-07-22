@@ -15,13 +15,13 @@ export const pool = mysql.createPool({
   dateStrings: true,
 });
 
-export async function testConnection(): Promise<void> {
+export async function testarConexao(): Promise<void> {
   try {
-    const connection = await pool.getConnection();
+    const conexao = await pool.getConnection();
     console.log("✅ Conexão com o banco de dados MySQL estabelecida com sucesso.");
-    connection.release();
-  } catch (error) {
-    console.error("❌ Erro ao conectar ao banco de dados:", error);
+    conexao.release();
+  } catch (erro) {
+    console.error("❌ Erro ao conectar ao banco de dados:", erro);
     process.exit(1);
   }
 }

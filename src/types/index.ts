@@ -1,4 +1,4 @@
-export interface User {
+export interface Usuario {
   id: number;
   name: string;
   email: string;
@@ -9,7 +9,7 @@ export interface User {
   updated_at?: string;
 }
 
-export interface UserPublic {
+export interface UsuarioPublico {
   id: number;
   name: string;
   email: string;
@@ -17,7 +17,7 @@ export interface UserPublic {
   created_at?: string;
 }
 
-export interface Article {
+export interface Artigo {
   id: number;
   title: string;
   content: string;
@@ -30,12 +30,12 @@ export interface Article {
   updated_at: string;
 }
 
-export interface ArticleWithAuthor extends Omit<Article, "banner_image"> {
+export interface ArtigoComAutor extends Omit<Artigo, "banner_image"> {
   author_name: string;
   has_banner: boolean;
 }
 
-export interface Comment {
+export interface Comentario {
   id: number;
   article_id: number;
   user_id: number;
@@ -43,11 +43,11 @@ export interface Comment {
   created_at: string;
 }
 
-export interface CommentWithAuthor extends Comment {
+export interface ComentarioComAutor extends Comentario {
   author_name: string;
 }
 
-export interface AuthTokenPayload {
+export interface PayloadToken {
   id: number;
   email: string;
 }
@@ -55,7 +55,7 @@ export interface AuthTokenPayload {
 declare global {
   namespace Express {
     interface Request {
-      user?: AuthTokenPayload;
+      usuario?: PayloadToken;
     }
   }
 }

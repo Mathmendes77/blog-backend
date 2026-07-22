@@ -1,13 +1,13 @@
 import app from "./app";
-import { testConnection } from "./config/database";
+import { testarConexao } from "./config/database";
 
-const PORT = process.env.PORT || 3333;
+const PORTA = process.env.PORT || 3333;
 
-async function start() {
-  await testConnection();
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+async function iniciar() {
+  await testarConexao();
+  app.listen(PORTA, () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORTA}`);
   });
 }
 
-start();
+iniciar();

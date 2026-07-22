@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
-import { AuthTokenPayload } from "../types";
+import { PayloadToken } from "../types";
 
-const JWT_SECRET = process.env.JWT_SECRET || "default_secret_change_me";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1d";
+const SEGREDO_JWT = process.env.JWT_SECRET || "default_secret_change_me";
+const EXPIRACAO_JWT = process.env.JWT_EXPIRES_IN || "1d";
 
-export function generateToken(payload: AuthTokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
+export function gerarToken(payload: PayloadToken): string {
+  return jwt.sign(payload, SEGREDO_JWT, { expiresIn: EXPIRACAO_JWT } as jwt.SignOptions);
 }
 
-export function verifyToken(token: string): AuthTokenPayload {
-  return jwt.verify(token, JWT_SECRET) as AuthTokenPayload;
+export function verificarToken(token: string): PayloadToken {
+  return jwt.verify(token, SEGREDO_JWT) as PayloadToken;
 }
